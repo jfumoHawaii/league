@@ -1,5 +1,8 @@
 name: Run R Script Daily
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:   # lets you run manually (for testing)
   schedule:
