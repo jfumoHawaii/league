@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
@@ -50,14 +50,25 @@ jobs:
             cp leagueScores.csv backups/leagueScores_$(date +%Y%m%d_%H%M%S).csv
           fi
 
-      - name: Commit updated leagueScores
+      - name: Commit updated files
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          
-          git add leagueScores.csv backups/ docs/
 
-          git commit -m "Auto-update leagueScores $(date +%Y-%m-%d)" || echo "No changes to commit"
-          
+          mkdir -p backups
+
+          # Backup previous version FROM GIT (important!)
+          git fetch origin main
+          git checkout origin/main -- leagueScores.csv || true
+
+          if [ -f leagueScores.csv ]; then
+            cp leagueScores.csv backups/leagueScores_$(date +%Y%m%d_%H%M%S).csv
+          fi
+
+          # Now add NEW files
+          git add leagueScores.csv backups/ docs/ || true
+
+          git commit -m "Auto-update $(date +%Y-%m-%d)" || echo "No changes"
+
           git push
 
