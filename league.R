@@ -129,8 +129,11 @@ p <- ggplot(ts, aes(x = time, y = sums, color = name)) +
 p_int <- ggplotly(p)
 
 # save
-file <- "ts_plot.html"
-saveWidget(p_int, file, selfcontained = F)
+dir.create("docs", showWarnings = FALSE)
+
+file <- "docs/index.html"
+saveWidget(p_int, file, selfcontained = FALSE)
+
 p_int
 
 # upload
@@ -180,6 +183,6 @@ p_smooth=ggplot(ts, aes(x = time, y = sums, color = name)) +
 p_smooth <- ggplotly(p_smooth)
 
 # save
-file <- "ts_smooth.html"
-saveWidget(p_smooth, file, selfcontained = F)
+#file <- "ts_smooth.html"
+#saveWidget(p_smooth, file, selfcontained = F)
 
