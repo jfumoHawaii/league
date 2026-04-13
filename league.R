@@ -120,7 +120,6 @@ ts$time=as.POSIXct(strptime(ts$time,"%Y%m%d"),timezone="Pacific/Honolulu")
 library(ggplot2)
 library(plotly)
 library(htmlwidgets)
-library(googledrive)
 
 # plot
 p <- ggplot(ts, aes(x = time, y = sums, color = name)) +
