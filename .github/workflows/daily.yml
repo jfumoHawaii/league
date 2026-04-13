@@ -38,3 +38,23 @@ jobs:
             *_files/
             *.pdf
             leagueScores.csv
+
+
+      - name: Backup previous leagueScores
+        run: |
+          mkdir -p backups
+          if [ -f leagueScores.csv ]; then
+            cp leagueScores.csv backups/leagueScores_$(date +%Y%m%d_%H%M%S).csv
+          fi
+
+      - name: Commit updated leagueScores
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          
+          git add leagueScores.csv backups/
+          
+          git commit -m "Auto-update leagueScores $(date +%Y-%m-%d)" || echo "No changes to commit"
+          
+          git push
+
