@@ -130,7 +130,7 @@ p_int <- ggplotly(p)
 
 # save
 file <- "ts_plot.html"
-saveWidget(p_int, file, selfcontained = TRUE)
+saveWidget(p_int, file, selfcontained = F)
 p_int
 
 # upload
@@ -181,5 +181,5 @@ p_smooth <- ggplotly(p_smooth)
 
 # save
 file <- "ts_smooth.html"
-saveWidget(p_smooth, file, selfcontained = TRUE)
+saveWidget(p_smooth, file, selfcontained = F)
 
