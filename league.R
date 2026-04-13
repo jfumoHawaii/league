@@ -1,7 +1,5 @@
 rm(list = ls())
-install.packages("httr")
 library(httr)
-install.packages("jsonlite")
 library(jsonlite)
 
 # Function to retrieve all players using pagination
@@ -118,13 +116,10 @@ ts$sums=rowSums(apply(ts[, 3:5], 2, as.numeric))
 
 ts$time=as.POSIXct(strptime(ts$time,"%Y%m%d"),timezone="Pacific/Honolulu")
 
-install.packages("ggplot2")
+
 library(ggplot2)
-install.packages("plotly")
 library(plotly)
-install.packages("htmlwidgets")
 library(htmlwidgets)
-install.packages("googledrive")
 library(googledrive)
 
 # plot
@@ -147,7 +142,6 @@ p_int
 
 
 #######################
-install.packages("reshape2")
 library(reshape2)
 
 ts_long <- melt(ts,
