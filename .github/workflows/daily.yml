@@ -6,7 +6,7 @@ permissions:
 on:
   workflow_dispatch:   # lets you run manually (for testing)
   schedule:
-    - cron: "0 14 * * *"   # runs daily at 9 AM Ecuador (UTC-5)
+    - cron: "40 17 * * *"   # runs daily at 8 AM Galapagos (UTC-6)
 
 jobs:
   run-script:
