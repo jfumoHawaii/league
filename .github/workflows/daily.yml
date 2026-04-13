@@ -35,5 +35,6 @@ jobs:
           path: |
             *.png
             *.html
+            *_files/
             *.pdf
             leagueScores.csv
