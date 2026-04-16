@@ -86,11 +86,30 @@ legend("bottomright",legend=as.vector(c("Tier A","Tier B","Tier C")),pch=c(15,15
 
 
 
-readDF=read.csv("leagueScores.csv")
+file_name <- "leagueScores.csv"
 
-readDF[[paste("ABC",gsub("-","",Sys.Date()),sep='')]]=unlist(lapply(c(1:length(stack$Name)),function(x){paste(as.numeric(mat[,which(stack$Name[x]==colnames(mat))]),collapse="-")}))
+# If file doesn't exist, initialize it
+if (!file.exists(file_name)) {
+  readDF <- data.frame(name = stack$Name)
+} else {
+  readDF <- read.csv(file_name, stringsAsFactors = FALSE)
+}
 
-write.csv(readDF,"leagueScores.csv",row.names = F)
+# Ensure names match current league
+if (!"name" %in% colnames(readDF)) {
+  readDF$name <- stack$Name
+}
+
+# Add today's column
+new_col <- paste("ABC", gsub("-", "", Sys.Date()), sep='')
+
+readDF[[new_col]] <- unlist(lapply(1:length(stack$Name), function(x) {
+  paste(as.numeric(mat[, which(stack$Name[x] == colnames(mat))]), collapse = "-")
+}))
+
+# ✅ ALWAYS overwrite cleanly
+write.csv(readDF, file_name, row.names = FALSE)
+
 
 
 rownames(readDF)=readDF$name
