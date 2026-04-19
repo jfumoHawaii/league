@@ -28,14 +28,16 @@ jobs:
           libcurl4-openssl-dev \
           libssl-dev \
           libxml2-dev \
+          libfontconfig1-dev \
           pandoc
 
       - name: Install R packages
         run: |
           Rscript -e 'options(repos = c(CRAN="https://cloud.r-project.org"))'
-          Rscript -e 'install.packages(c("httr","jsonlite","ggplot2","reshape2"), dependencies=TRUE)'
-          Rscript -e 'install.packages(c("htmltools","htmlwidgets"), dependencies=TRUE)'
-          Rscript -e 'install.packages("plotly", dependencies=TRUE)'
+          Rscript -e 'install.packages(c("pkgload","fs","bslib"), dependencies=TRUE, Ncpus=1)'
+          Rscript -e 'install.packages(c("shiny","rmarkdown"), dependencies=TRUE, Ncpus=1)'
+          Rscript -e 'install.packages(c("htmlwidgets"), dependencies=TRUE, Ncpus=1)'
+          Rscript -e 'install.packages(c("plotly"), dependencies=TRUE, Ncpus=1)'
 
       # ✅ BACKUP CURRENT FILE FROM REPO BEFORE OVERWRITING
       - name: Backup previous leagueScores
