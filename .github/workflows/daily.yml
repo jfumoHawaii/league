@@ -17,62 +17,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.3.3'
+        uses: z
 
-      # =========================
-      # SYSTEM DEPENDENCIES
-      # =========================
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libcurl4-openssl-dev \
-            libssl-dev \
-            libxml2-dev \
-            libfontconfig1-dev \
-            libfreetype6-dev \
-            libharfbuzz-dev \
-            libfribidi-dev \
-            libpng-dev \
-            libtiff5-dev \
-            libjpeg-dev \
-            libudunits2-dev \
-            libgdal-dev \
-            libgeos-dev \
-            libproj-dev \
-            pandoc
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
 
-      # =========================
-      # R PACKAGE INSTALL (FIXED ORDER)
-      # =========================
       - name: Install R packages
         run: |
-          Rscript -e 'options(repos = c(CRAN="https://cloud.r-project.org"))'
+          Rscript -e 'install.packages(c("httr","jsonlite","ggplot2","plotly","htmlwidgets","reshape2"), repos="https://cloud.r-project.org")'
 
-          # Core dependency system FIRST
-          Rscript -e 'install.packages(c("fs","pkgload","sass","bslib"), dependencies=TRUE)'
-
-          # HTML / reporting stack SECOND
-          Rscript -e 'install.packages(c("rmarkdown","shiny","htmltools","htmlwidgets"), dependencies=TRUE)'
-
-          # Plotting stack THIRD
-          Rscript -e 'install.packages(c("ggplot2","plotly","reshape2","ggthemes"), dependencies=TRUE)'
-
-          # Data / utilities
-          Rscript -e 'install.packages(c("httr","jsonlite"), dependencies=TRUE)'
-
-      # =========================
-      # SAFETY CHECK
-      # =========================
-      - name: Test critical libraries
-        run: |
-          Rscript -e 'library(rmarkdown); library(htmlwidgets); library(plotly); cat("All core packages loaded\n")'
-
-      # =========================
-      # BACKUP
-      # =========================
+      # ✅ BACKUP CURRENT FILE FROM REPO BEFORE OVERWRITING
       - name: Backup previous leagueScores
         run: |
           mkdir -p backups
@@ -80,15 +36,10 @@ jobs:
             cp leagueScores.csv backups/leagueScores_$(date +%Y%m%d_%H%M%S).csv
           fi
 
-      # =========================
-      # RUN SCRIPT
-      # =========================
+      # ✅ RUN SCRIPT (this overwrites leagueScores.csv)
       - name: Run R script
         run: Rscript league.R
 
-      # =========================
-      # ARTIFACTS
-      # =========================
       - name: Upload outputs
         uses: actions/upload-artifact@v4
         with:
@@ -100,9 +51,7 @@ jobs:
             *.pdf
             leagueScores.csv
 
-      # =========================
-      # COMMIT RESULTS
-      # =========================
+      # ✅ COMMIT NEW VERSION
       - name: Commit updated files
         run: |
           git config --global user.name "github-actions"
