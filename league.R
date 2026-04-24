@@ -1,6 +1,12 @@
 rm(list = ls())
 library(httr)
 library(jsonlite)
+library(ggplot2)
+library(reshape2)
+library(echarts4r)
+library(htmlwidgets)
+library(dplyr)
+
 
 # Function to retrieve all players using pagination
 get_all_hr <- function(season = 2026, limit = 10000) {
@@ -78,14 +84,6 @@ colnames(mat) <- another$name
 mat=mat[-1,]
 mat=mat[,seq(20,1,-1)]
 
-
-barplot((mat),horiz = T,
-        col = c("dodgerblue","goldenrod","forestgreen"),
-        las = 2)  # rotate names if needed
-legend("bottomright",legend=as.vector(c("Tier A","Tier B","Tier C")),pch=c(15,15,15),col=c("dodgerblue","goldenrod","forestgreen"))
-
-
-
 file_name <- "leagueScores.csv"
 
 # If file doesn't exist, initialize it
@@ -135,73 +133,53 @@ ts$sums=rowSums(apply(ts[, 3:5], 2, as.numeric))
 
 ts$time=as.POSIXct(strptime(ts$time,"%Y%m%d"),timezone="Pacific/Honolulu")
 
+avg_df <- ts %>%
+  group_by(time) %>%
+  summarise(sums = mean(sums, na.rm = TRUE)) %>%
+  mutate(name = "Average")
 
-library(ggplot2)
-library(plotly)
-library(htmlwidgets)
-
-# plot
-p <- ggplot(ts, aes(x = time, y = sums, color = name)) +
-  geom_line(linewidth = 1) +
-  theme_minimal()
-
-p_int <- ggplotly(p)
-
-# save
-dir.create("docs", showWarnings = FALSE)
-
-file <- "docs/index.html"
-saveWidget(p_int, file, selfcontained = FALSE)
-
-p_int
-
-# upload
-#drive_auth()
-#
-#
-#drive_upload(file, overwrite = TRUE)
+avg_df=as.data.frame(avg_df)
+avg_df=data.frame(name="Average",time=avg_df$time,A=0,B=0,C=0,sums=avg_df$sums)
 
 
-#######################
-library(reshape2)
+# Combine with original data
+ts <- rbind(ts, avg_df)
+##############
+legend_selection <- as.list(
+  setNames(
+    rep(FALSE, length(unique(ts$name))),
+    unique(ts$name)
+  )
+)
 
-ts_long <- melt(ts,
-                id.vars = c("name", "time"),
-                measure.vars = c("A", "B", "C"),
-                variable.name = "tier",
-                value.name = "value")
-
-ts_long$value <- as.numeric(ts_long$value)
-
-ggplot(ts_long, aes(x = time, y = value, fill = tier)) +
-  geom_area(position = "stack") +
-  facet_wrap(~name) +
-  theme_minimal()
-
-pdf(width=11,height=8.5,"wedges.pdf")
-ggplot(ts_long[ts_long$name=="Jimmy" | ts_long$name=="Matt" | ts_long$name=="Cam" | ts_long$name=="JG",], aes(x = time, y = value, fill = tier)) +
-  geom_area(position = "stack") +
-  facet_wrap(~name) +
-  theme_minimal()
-dev.off()
-dev.off()
-######################
-mat <- reshape2::dcast(ts, name ~ time, value.var = "sums")
-rownames(mat) <- mat$name
-mat <- mat[,-1]
-
-d <- dist(mat)
-hc <- hclust(d)
-
-plot(hc)
-######################
-p_smooth=ggplot(ts, aes(x = time, y = sums, color = name)) +
-  geom_smooth(se = FALSE, linewidth = 1.2) +
-  theme_minimal()
-
-p_smooth <- ggplotly(p_smooth)
+p_int <- ts %>%
+  group_by(name) %>%
+  e_charts(time) %>%
+  e_line(sums, symbol = "none", smooth = TRUE) %>%
+  
+  e_tooltip(
+    trigger = "axis",
+    backgroundColor = "rgba(255,255,255,0.95)",  # white box
+    borderColor = "#ccc",
+    borderWidth = 1,
+    textStyle = list(color = "#333"),
+    extraCssText = "box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+  ) %>%
+  
+  e_legend(
+    show = TRUE,
+    type = "scroll",
+    orient = "vertical",
+    right = 10,
+    top = "middle",
+    selected = legend_selection   # now safe
+  ) %>%
+  
+  e_title("League Scores Over Time") %>%
+  e_theme("shine") %>%
+  
+  e_datazoom(type = "inside") %>%
+  e_toolbox_feature(feature = c("dataZoom", "restore"))
 
 # save
-#file <- "ts_smooth.html"
-#saveWidget(p_smooth, file, selfcontained = F)
-
+saveWidget(p_int, "docs/index.html", selfcontained = FALSE)
