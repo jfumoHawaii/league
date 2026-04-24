@@ -1,34 +1,51 @@
 name: Run R Script Daily
 
-permissions:
-  contents: write
-
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 11 * * *"   # 5 AM Galapagos (UTC-6)
+
+permissions:
+  contents: write
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
+      # ✅ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ✅ Setup R (reliable)
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
 
+      # ✅ Install system dependencies (safe baseline)
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev
 
-      - name: Install R packages
-        run: |
-          Rscript -e 'install.packages(c("httr","jsonlite","ggplot2","reshape2","echarts4r","htmlwidgets","dplyr"), repos="https://cloud.r-project.org")'
+      # ✅ Install R packages with caching (KEY STEP)
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            httr
+            jsonlite
+            ggplot2
+            reshape2
+            dplyr
+            htmlwidgets
+            shiny
+            echarts4r
 
-      # ✅ BACKUP CURRENT FILE FROM REPO BEFORE OVERWRITING
+      # ✅ Backup previous CSV
       - name: Backup previous leagueScores
         run: |
           mkdir -p backups
@@ -36,28 +53,29 @@ jobs:
             cp leagueScores.csv backups/leagueScores_$(date +%Y%m%d_%H%M%S).csv
           fi
 
-      # ✅ RUN SCRIPT (this overwrites leagueScores.csv)
+      # ✅ Run your script
       - name: Run R script
         run: Rscript league.R
 
+      # ✅ Upload artifacts (optional but useful for debugging)
       - name: Upload outputs
         uses: actions/upload-artifact@v4
         with:
           name: outputs
           path: |
-            *.png
-            *.html
-            *_files/
+            docs/
+            *.csv
             *.pdf
-            leagueScores.csv
+            *.png
+            *_files/
 
-      # ✅ COMMIT NEW VERSION
+      # ✅ Commit updated files back to repo
       - name: Commit updated files
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          git add leagueScores.csv backups/ docs/ || true
+          git add docs/ leagueScores.csv backups/ || true
 
           git commit -m "Auto-update $(date +%Y-%m-%d)" || echo "No changes"
 
